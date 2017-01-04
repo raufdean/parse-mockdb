@@ -487,7 +487,6 @@ describe('ParseMock', () => {
   );
 
   it('should use a descending order for query', () =>
-      // the used two points are 133.4 km away according to http://www.movable-type.co.uk/scripts/latlong.html
       new Item().save({
         price: 21,
       }).then(item1 =>
