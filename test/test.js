@@ -467,7 +467,7 @@ describe('ParseMock', () => {
   it('should use a custom order over ordering from nearest to furthest in a geo query', () =>
     // the used two points are 133.4 km away according to http://www.movable-type.co.uk/scripts/latlong.html
     new Item().save({
-      price: 10,
+      price: 21,
       location: new Parse.GeoPoint(49, 7),
     }).then(item1 =>
       new Item().save({
@@ -479,9 +479,33 @@ describe('ParseMock', () => {
           .ascending('price')
           .find()
           .then(results => {
-            assert.equal(results[0].id, item1.id);
-            assert.equal(results[1].id, item2.id);
+            assert.equal(results[0].id, item2.id);
+            assert.equal(results[1].id, item1.id);
           })
+      )
+    )
+  );
+
+  it('should use a descending order for query', () =>
+      // the used two points are 133.4 km away according to http://www.movable-type.co.uk/scripts/latlong.html
+      new Item().save({
+        price: 21,
+      }).then(item1 =>
+          new Item().save({
+            price: 25,
+          }).then(item2 =>
+          new Item().save({
+            price: 20,
+          }).then(item3 =>
+          new Parse.Query(Item)
+            .descending('price')
+            .find()
+            .then(results => {
+              assert.equal(results[0].id, item2.id);
+              assert.equal(results[1].id, item1.id);
+              assert.equal(results[2].id, item3.id);
+            })
+        )
       )
     )
   );
