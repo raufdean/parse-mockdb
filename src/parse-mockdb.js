@@ -581,7 +581,7 @@ function sortQueryresults(matches, order) {
     }
     sortArray.push({ dataItem: item, sortVal });
   });
-  sortArray.sort((a, b) => (a.sortVal - b.sortVal) * sortDir);
+  sortArray.sort((a, b) => ((a.sortVal > b.sortVal) ? 1 : -1) * sortDir);
 
   return sortArray.map(sortItem => sortItem.dataItem);
 }

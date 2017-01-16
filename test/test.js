@@ -509,6 +509,29 @@ describe('ParseMock', () => {
     )
   );
 
+  it('should use a descending order for text queries', () =>
+      new Item().save({
+        moniker: 'Meerkat',
+      }).then(item1 =>
+          new Item().save({
+            moniker: 'Aardvaark',
+          }).then(item2 =>
+          new Item().save({
+            moniker: 'Zebra',
+          }).then(item3 =>
+          new Parse.Query(Item)
+            .descending('moniker')
+            .find()
+            .then(results => {
+              assert.equal(results[0].id, item3.id);
+              assert.equal(results[1].id, item1.id);
+              assert.equal(results[2].id, item2.id);
+            })
+        )
+      )
+    )
+  );
+
   it('should support unset', () =>
     createItemP(30).then((item) => {
       item.unset('price');
