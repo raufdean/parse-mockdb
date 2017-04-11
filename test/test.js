@@ -25,7 +25,8 @@ class Store extends Parse.Object {
 }
 Parse.Object.registerSubclass('Store', Store);
 
-class CustomUserSubclass extends Parse.User { }
+class CustomUserSubclass extends Parse.User {
+}
 
 function createBrandP(name) {
   const brand = new Brand();
@@ -227,7 +228,7 @@ describe('ParseMock', () => {
           assert.equal(results[0].id, item.id);
           assert.equal(results[0].get('price'), item.get('price'));
         })
-    )
+      )
   );
 
   it('should match a query that uses equalTo as contains constraint', () =>
@@ -236,13 +237,13 @@ describe('ParseMock', () => {
         new Parse.Object('Factory').save({
           items: [item],
         })
-        .then(savedComp => new Parse.Query('Factory')
-          .equalTo('items', item)
-          .find()
-          .then(results => {
-            assert.equal(results[0].id, savedComp.id);
-          })
-        )
+          .then(savedComp => new Parse.Query('Factory')
+            .equalTo('items', item)
+            .find()
+            .then(results => {
+              assert.equal(results[0].id, savedComp.id);
+            })
+          )
       )
   );
 
@@ -265,7 +266,7 @@ describe('ParseMock', () => {
       .equalTo('items', [0, 1])
       .find()
       .then(() => Parse.Promise.error(
-          new Error('Promise should have failed')),
+        new Error('Promise should have failed')),
         () => Parse.Promise.as(true))
     )
   );
@@ -344,11 +345,11 @@ describe('ParseMock', () => {
       brand.set('name', 'foo');
       return brand.save();
     })
-    .then((sbrand) => {
-      assert.equal(sbrand.get('items')[0].get('price'), undefined);
-      assert.equal(sbrand.get('items')[1].get('price'), 50);
-      assert.equal(sbrand.get('items')[2].get('price'), 30);
-    })
+      .then((sbrand) => {
+        assert.equal(sbrand.get('items')[0].get('price'), undefined);
+        assert.equal(sbrand.get('items')[1].get('price'), 50);
+        assert.equal(sbrand.get('items')[2].get('price'), 30);
+      })
   );
 
   it('should save a nested item and return it with the save even with a hook defined', () => {
@@ -383,11 +384,11 @@ describe('ParseMock', () => {
       brand.set('name', 'foo');
       return brand.save();
     })
-    .then((sbrand) => {
-      assert.equal(sbrand.get('items')[0].get('price'), undefined);
-      assert.equal(sbrand.get('items')[1].get('price'), 50);
-      assert.equal(sbrand.get('items')[2].get('price'), 30);
-    });
+      .then((sbrand) => {
+        assert.equal(sbrand.get('items')[0].get('price'), undefined);
+        assert.equal(sbrand.get('items')[1].get('price'), 50);
+        assert.equal(sbrand.get('items')[2].get('price'), 30);
+      });
   });
 
   it('should support increment', () =>
@@ -487,15 +488,15 @@ describe('ParseMock', () => {
   );
 
   it('should use a descending order for query', () =>
+    new Item().save({
+      price: 21,
+    }).then(item1 =>
       new Item().save({
-        price: 21,
-      }).then(item1 =>
-          new Item().save({
-            price: 25,
-          }).then(item2 =>
-          new Item().save({
-            price: 20,
-          }).then(item3 =>
+        price: 25,
+      }).then(item2 =>
+        new Item().save({
+          price: 20,
+        }).then(item3 =>
           new Parse.Query(Item)
             .descending('price')
             .find()
@@ -509,16 +510,219 @@ describe('ParseMock', () => {
     )
   );
 
-  it('should use a descending order for text queries', () =>
+  it('should return correct results for a gt numeric query', () =>
+    new Item().save({
+      price: 21,
+    }).then(() =>
       new Item().save({
-        moniker: 'Meerkat',
-      }).then(item1 =>
+        price: 25,
+      }).then(() =>
+        new Item().save({
+          price: 20,
+        }).then(() =>
+          new Parse.Query(Item)
+            .greaterThan('price', 21)
+            .find()
+            .then(results => {
+              assert(results.length === 1);
+              assert(results[0].get('price'), 25);
+            })
+        )
+      )
+    )
+  );
+
+  it('should return correct results for a gt string query', () =>
+    new Item().save({
+      price: '9',
+    }).then(() =>
+      new Item().save({
+        price: '10',
+      }).then(() =>
+        new Item().save({
+          price: '11',
+        }).then(() =>
+          new Parse.Query(Item)
+            .greaterThan('price', '9')
+            .ascending('price')
+            .find()
+            .then(results => {
+              assert(results.length === 2);
+              assert(results[0].get('price'), '10');
+              assert(results[1].get('price'), '11');
+            })
+        )
+      )
+    )
+  );
+
+  it('should return correct results for a ge numeric query', () =>
+    new Item().save({
+      price: 21,
+    }).then(() =>
+      new Item().save({
+        price: 25,
+      }).then(() =>
+        new Item().save({
+          price: 20,
+        }).then(() =>
+          new Parse.Query(Item)
+            .greaterThanOrEqualTo('price', 21)
+            .ascending('price')
+            .find()
+            .then(results => {
+              assert(results.length === 2);
+              assert(results[0].get('price'), 21);
+              assert(results[1].get('price'), 25);
+            })
+        )
+      )
+    )
+  );
+
+  it('should return correct results for a ge string query', () =>
+    new Item().save({
+      price: '8',
+    }).then(() =>
+      new Item().save({
+        price: '9',
+      }).then(() =>
+        new Item().save({
+          price: '10',
+        }).then(() =>
           new Item().save({
-            moniker: 'Aardvaark',
-          }).then(item2 =>
+            price: '11',
+          }).then(() =>
+            new Parse.Query(Item)
+              .greaterThanOrEqualTo('price', '9')
+              .ascending('price')
+              .find()
+              .then(results => {
+                assert(results.length === 3);
+                assert(results[0].get('price'), '9');
+                assert(results[1].get('price'), '10');
+                assert(results[2].get('price'), '11');
+              })
+          )
+        )
+      )
+    )
+  );
+
+  it('should return correct results for a lt numeric query', () =>
+    new Item().save({
+      price: 21,
+    }).then(() =>
+      new Item().save({
+        price: 25,
+      }).then(() =>
+        new Item().save({
+          price: 20,
+        }).then(() =>
+          new Parse.Query(Item)
+            .lessThan('price', 21)
+            .ascending('price')
+            .find()
+            .then(results => {
+              assert(results.length === 1);
+              assert(results[0].get('price'), 20);
+            })
+        )
+      )
+    )
+  );
+
+  it('should return correct results for a lt string query', () =>
+    new Item().save({
+      price: '8',
+    }).then(() =>
+      new Item().save({
+        price: '9',
+      }).then(() =>
+        new Item().save({
+          price: '10',
+        }).then(() =>
           new Item().save({
-            moniker: 'Zebra',
-          }).then(item3 =>
+            price: '11',
+          }).then(() =>
+            new Parse.Query(Item)
+              .lessThan('price', '10')
+              .ascending('price')
+              .find()
+              .then(results => {
+                assert(results.length === 2);
+                assert(results[0].get('price'), '8');
+                assert(results[1].get('price'), '9');
+              })
+          )
+        )
+      )
+    )
+  );
+
+  it('should return correct results for a le numeric query', () =>
+    new Item().save({
+      price: 21,
+    }).then(() =>
+      new Item().save({
+        price: 25,
+      }).then(() =>
+        new Item().save({
+          price: 20,
+        }).then(() =>
+          new Parse.Query(Item)
+            .lessThanOrEqualTo('price', 21)
+            .ascending('price')
+            .find()
+            .then(results => {
+              assert(results.length === 2);
+              assert(results[0].get('price'), 20);
+              assert(results[1].get('price'), 21);
+            })
+        )
+      )
+    )
+  );
+
+  it('should return correct results for a le string query', () =>
+    new Item().save({
+      price: '8',
+    }).then(() =>
+      new Item().save({
+        price: '9',
+      }).then(() =>
+        new Item().save({
+          price: '10',
+        }).then(() =>
+          new Item().save({
+            price: '11',
+          }).then(() =>
+            new Parse.Query(Item)
+              .lessThanOrEqualTo('price', '10')
+              .ascending('price')
+              .find()
+              .then(results => {
+                assert(results.length === 3);
+                assert(results[0].get('price'), '8');
+                assert(results[1].get('price'), '9');
+                assert(results[1].get('price'), '10');
+              })
+          )
+        )
+      )
+    )
+  );
+
+  it('should use a descending order for text queries', () =>
+    new Item().save({
+      moniker: 'Meerkat',
+    }).then(item1 =>
+      new Item().save({
+        moniker: 'Aardvaark',
+      }).then(item2 =>
+        new Item().save({
+          moniker: 'Zebra',
+        }).then(item3 =>
           new Parse.Query(Item)
             .descending('moniker')
             .find()
@@ -661,7 +865,7 @@ describe('ParseMock', () => {
               });
             });
           })
-    )
+      )
   );
 
   it('should return invalid pointers if they are not included', () => {
@@ -695,33 +899,33 @@ describe('ParseMock', () => {
     let c;
 
     return Parse.Promise.when(
-        new Parse.Object('a', { value: '1' }).save(),
-        new Parse.Object('a', { value: '2' }).save())
-    .then((savedA1, savedA2) => {
-      a1 = savedA1;
-      a2 = savedA2;
-      return new Parse.Object('b', { a1, a2 }).save();
-    })
-    .then((savedB) => {
-      b = savedB;
-      return new Parse.Object('c', { b }).save();
-    })
-    .then((savedC) => {
-      c = savedC;
-      return new Parse.Query('c')
+      new Parse.Object('a', { value: '1' }).save(),
+      new Parse.Object('a', { value: '2' }).save())
+      .then((savedA1, savedA2) => {
+        a1 = savedA1;
+        a2 = savedA2;
+        return new Parse.Object('b', { a1, a2 }).save();
+      })
+      .then((savedB) => {
+        b = savedB;
+        return new Parse.Object('c', { b }).save();
+      })
+      .then((savedC) => {
+        c = savedC;
+        return new Parse.Query('c')
           .include('b')
           .include('b.a1')
           .include('b.a2')
           .first();
-    })
-    .then((loadedC) => {
-      assert.equal(loadedC.id, c.id);
-      assert.equal(loadedC.get('b').id, b.id);
-      assert.equal(loadedC.get('b').get('a1').id, a1.id);
-      assert.equal(loadedC.get('b').get('a2').id, a2.id);
-      assert.equal(loadedC.get('b').get('a1').get('value'), a1.get('value'));
-      assert.equal(loadedC.get('b').get('a2').get('value'), a2.get('value'));
-    });
+      })
+      .then((loadedC) => {
+        assert.equal(loadedC.id, c.id);
+        assert.equal(loadedC.get('b').id, b.id);
+        assert.equal(loadedC.get('b').get('a1').id, a1.id);
+        assert.equal(loadedC.get('b').get('a2').id, a2.id);
+        assert.equal(loadedC.get('b').get('a1').get('value'), a1.get('value'));
+        assert.equal(loadedC.get('b').get('a2').get('value'), a2.get('value'));
+      });
   });
 
   it('should handle includes over arrays of pointers', () => {
@@ -796,13 +1000,13 @@ describe('ParseMock', () => {
   it('should handle delete', () => {
     const item = new Item();
     return item.save().then(() => new Parse.Query(Item).first()
-      ).then((foundItem) => {
-        assert(foundItem);
-        return foundItem.destroy();
-      }).then(() => new Parse.Query(Item).first())
-        .then((foundItem) => {
-          assert(!foundItem);
-        });
+    ).then((foundItem) => {
+      assert(foundItem);
+      return foundItem.destroy();
+    }).then(() => new Parse.Query(Item).first())
+      .then((foundItem) => {
+        assert(!foundItem);
+      });
   });
 
   it('should do a fetch query', () => {
@@ -839,7 +1043,7 @@ describe('ParseMock', () => {
   });
 
   it('should find with objectId and where', () =>
-     Parse.Promise.when(
+    Parse.Promise.when(
       new Item().save({ price: 30 }),
       new Item().save({ name: 'Device' })
     ).then((item1) => {
@@ -1169,10 +1373,10 @@ describe('ParseMock', () => {
       storeQuery.matchesKeyInQuery('state', 'state', itemQuery);
       return Parse.Promise.when(storeQuery.find(), Parse.Promise.as(store));
     })
-    .then((storeMatches, store) => {
-      assert.equal(storeMatches.length, 1);
-      assert.equal(storeMatches[0].id, store.id);
-    });
+      .then((storeMatches, store) => {
+        assert.equal(storeMatches.length, 1);
+        assert.equal(storeMatches[0].id, store.id);
+      });
   });
 
   it('should find items not filtered by a notContainedIn', () =>
@@ -1392,31 +1596,31 @@ describe('ParseMock', () => {
       relation.add(toothPaste);
       return store.save();
     })
-    .then(() => store.fetch()
-    ).then((fetchedStore) => {
-      const fetchRelation = fetchedStore.relation('items');
-      return fetchRelation.query().count();
-    })
-    .then((itemCount) => {
-      assert.equal(itemCount, 2);
-      const relation = store.relation('items');
-      const query = relation.query();
-      return query.find();
-    })
-    .then((items) => {
-      assert.equal(items.length, 2);
-      assert.equal(items[0].className, 'Item');
-      const relation = store.relation('items');
-      relation.remove(items[1]);
-      return store.save();
-    })
-    .then((store1) => {
-      store1.relation('items');
-      return store.relation('items').query().find();
-    })
-    .then((items) => {
-      assert.equal(items.length, 1);
-    });
+      .then(() => store.fetch()
+      ).then((fetchedStore) => {
+        const fetchRelation = fetchedStore.relation('items');
+        return fetchRelation.query().count();
+      })
+      .then((itemCount) => {
+        assert.equal(itemCount, 2);
+        const relation = store.relation('items');
+        const query = relation.query();
+        return query.find();
+      })
+      .then((items) => {
+        assert.equal(items.length, 2);
+        assert.equal(items[0].className, 'Item');
+        const relation = store.relation('items');
+        relation.remove(items[1]);
+        return store.save();
+      })
+      .then((store1) => {
+        store1.relation('items');
+        return store.relation('items').query().find();
+      })
+      .then((items) => {
+        assert.equal(items.length, 1);
+      });
   });
 
   it('should handle a direct query on a relation field', () => {
@@ -1463,10 +1667,10 @@ describe('ParseMock', () => {
     roleACL.setPublicReadAccess(true);
     const role = new Parse.Role('Turtle', roleACL);
     return role.save().then(() => new Parse.Query(Parse.Role).find())
-    .then((foundRoles) => {
-      assert.equal(foundRoles.length, 1);
-      assert.equal(foundRoles[0].get('name'), 'Turtle');
-    });
+      .then((foundRoles) => {
+        assert.equal(foundRoles.length, 1);
+        assert.equal(foundRoles[0].get('name'), 'Turtle');
+      });
   });
 
   it('should handle redirectClassNameForKey', () => {
@@ -1516,9 +1720,9 @@ describe('ParseMock', () => {
         storeQuery.equalTo('customOptions.weekendAvailability.sun', true);
         return storeQuery.count();
       })
-      .then((count) => {
-        assert.equal(count, 0);
-      });
+        .then((count) => {
+          assert.equal(count, 0);
+        });
     });
   });
 });

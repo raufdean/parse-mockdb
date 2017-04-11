@@ -293,6 +293,20 @@ const RADIUS_OF_EARTH_MILES = 3958.8;
 const DEFAULT_MAX_DISTANCE = 100 / RADIUS_OF_EARTH_MILES;
 
 /**
+ * Comparison function - Creates a value to do simple lt, gt comparisons
+ * from a string, date etc
+ */
+function createCmpVal(val) {
+  let cmpVal = val;
+  // Attempt to handle dates, numbers and strings
+  const dateVal = new Date(val);
+  if (dateVal !== 'Invalid Date' && !isNaN(dateVal)) {
+    cmpVal = dateVal.getTime();
+  }
+  return cmpVal;
+}
+
+/**
  * Operators for queries
  *
  * Params:
@@ -305,10 +319,10 @@ const QUERY_OPERATORS = {
   $nin: (operand, values) => _.every(values, value => !objectsAreEqual(operand, value)),
   $eq: (operand, value) => objectsAreEqual(operand, value),
   $ne: (operand, value) => !objectsAreEqual(operand, value),
-  $lt: (operand, value) => operand < value,
-  $lte: (operand, value) => operand <= value,
-  $gt: (operand, value) => operand > value,
-  $gte: (operand, value) => operand >= value,
+  $lt: (operand, value) => createCmpVal(operand) < createCmpVal(value),
+  $lte: (operand, value) => createCmpVal(operand) <= createCmpVal(value),
+  $gt: (operand, value) => createCmpVal(operand) > createCmpVal(value),
+  $gte: (operand, value) => createCmpVal(operand) >= createCmpVal(value),
   $regex: (operand, value) => {
     const regex = _.clone(value).replace(QUOTE_REGEXP, '');
     return (new RegExp(regex).test(operand));
@@ -572,13 +586,7 @@ function sortQueryresults(matches, order) {
   }
   matches.forEach(item => {
     const keyVal = item[sortKey];
-    let sortVal = keyVal;
-
-    // Attempt to handle dates, numbers and strings
-    const keyDate = new Date(keyVal);
-    if (keyDate !== 'Invalid Date' && !isNaN(keyDate)) {
-      sortVal = keyDate.getTime();
-    }
+    const sortVal = createCmpVal(keyVal);
     sortArray.push({ dataItem: item, sortVal });
   });
   sortArray.sort((a, b) => ((a.sortVal > b.sortVal) ? 1 : -1) * sortDir);
